@@ -9,4 +9,4 @@ def P_gm_band(theta, shear, lmax,lmin):
     
     delta_l = np.log(lmax/lmin)
     
-    return 2*np.pi/delta_l*simps(shear*h(lmin*theta)-h(lmax*theta),np.log(theta))
+    return 2*np.pi/delta_l*simps(shear*(h(lmin*theta)-h(lmax*theta)),np.log(theta))

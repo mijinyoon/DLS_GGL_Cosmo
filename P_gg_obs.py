@@ -10,4 +10,4 @@ def P_gg_band(theta, w, lmax,lmin):
     
     delta_l = np.log(lmax/lmin)
 
-    return 2*np.pi/delta_l*simps(w*f(lmin*theta)-f(lmax*theta),np.log(theta))
+    return 2*np.pi/delta_l*simps(w*(f(lmin*theta)-f(lmax*theta)),np.log(theta))

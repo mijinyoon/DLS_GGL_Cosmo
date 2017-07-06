@@ -17,3 +17,10 @@ def P_gg_ell(b, ell,p_z, z ):
 
 
     return b**2*simps(p_z**2/fk**2*P_nonlin((ell+1./2.)/fk), x)
+
+def P_band(ell, P_ell):
+    lmin = ell[0]
+    lmax = ell[len(ell)-1]
+    delta_l = np.log(lmax/lmin)
+    
+    return 1./delta_l*simps(ell*P_ell, ell)

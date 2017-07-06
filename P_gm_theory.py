@@ -9,7 +9,6 @@ from astropy import constants as const
 
 cosmo = FlatLambdaCDM(H0 = 70, Om0 = 0.3)
 
-# redshift to comoving distance
 Ok0 = 0
 
 def fk_x(x):

@@ -26,8 +26,8 @@ def g(x,p_z):
     
     for i in range(1,len(x))
         
-        x' = x[i:]
-        gi[i] = simps(p_z[i:]*fk_x(x'-x[i])/fk_x(x'),x')
+        x_prime = x[i:]
+        gi[i] = simps(p_z[i:]*fk_x(x_prime-x[i])/fk_x(x_prime),x_prime)
                                           
     return gi
 

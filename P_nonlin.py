@@ -14,6 +14,7 @@ def sigma_sq(R):
 
 k_test = 10**(-10.+ np.arange(200)/10.)
 index = np.where(abs(sigma_sq(1./k_test) - 1.) == min(abs(sigma_sq(1./k_test) - 1.)))[0]
+k_sigma = k_test[index]
 n_eff = - (np.diff(sigma_sq(1./k_test))/np.diff(1./k_test))[index] -3.
 C = = - (np.diff(np.diff(sigma_sq(1./k_test))/np.diff(1./k_test))/np.diff(1./k_test))[index]
 

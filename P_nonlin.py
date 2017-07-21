@@ -2,85 +2,172 @@ import numpy as np
 import P_lin
 import pylab
 from scipy.integrate import simps
+h =0.7
 
-def sigma_sq(R):
+#data1 = np.loadtxt("P_nonlin.txt")
+data1 = np.loadtxt("ps_takahashi.txt")
+
+k_data = data1[:,0]*h
+P_data_1 = data1[:,2]
+
+z = 1.
+
+def sigma_sq(R,z):
     
     k = 10**(-10.+ np.arange(200)/10.)
-    Delta_L_sq = P_lin.P(k)*k**3/(2*np.pi**2)
+    Delta_L_sq = P_lin.P(k, z)*k**3/(2*np.pi**2)
     
     return simps(Delta_L_sq*np.exp(-k**2*R**2), np.log(k))
+
 vsigma_sq = np.vectorize(sigma_sq)
 
-def d_fun(x):
-    h = 1e-10
-    return (fun(x+h)-fun(x-h))/(2*h)
+def d_ln_sigma_sq(x,z):
+    step = 1e-10
+    return (np.log(sigma_sq(x+step,z))-np.log(sigma_sq(x-step,z)))/(np.log(x+step) - np.log(x-step))
+
+def d2_ln_sigma_sq(x,z):
+
+    step = 1e-6
+
+    t1 = (np.log(sigma_sq(x+2*step,z))-np.log(sigma_sq(x,z)))/(np.log(x+2*step)- np.log(x))
+    t2 = (np.log(sigma_sq(x,z))   -np.log(sigma_sq(x-2*step,z)))/(np.log(x)- np.log(x-2*step))
+    t3 = np.log(x+step) - np.log(x-step)
+    return (t1 - t2)/ t3
 
 
-k_test = 10**(-10.+ np.arange(400)/20.)
-print k_test
-print vsigma_sq(1./k_test)
+#k_test = 10**(-5.+ np.arange(400)/50.)
+k_test = k_data
+#print k_test
+#print vsigma_sq(1./k_test)
+
+PS_test = P_lin.P(k_test,z)
+P_data_1 = P_data_1/(k_data**3/(2*np.pi**2))
+
+pylab.plot(k_test,  PS_test*k_test**3/(2*np.pi**2), color = 'red' )
+pylab.plot(k_data, P_data_1*k_data**3/(2*np.pi**2), color = 'blue')
+
+pylab.xscale('log')
+pylab.yscale('log')
+pylab.show()
+
+mult_factor = P_data_1/PS_test
+pylab.plot(k_test,mult_factor)
+pylab.xscale('log')
+pylab.xlim([10**(-3),10])
+pylab.ylim([0,5])
+pylab.show()
+
+
+
+
 #pylab.plot(k_test,vsigma_sq(1./k_test) )
 #pylab.xscale('log')
 #pylab.yscale('log')
 #pylab.show()
 
-print min(abs(vsigma_sq(1./k_test)-1.))
+k_test2 = (np.arange(10000)+1.)/1000.
 
-index = np.where(abs(vsigma_sq(1./k_test) - 1.) == min(abs(vsigma_sq(1./k_test) - 1.)))[0]
+print min(abs(vsigma_sq(1./k_test2,z)-1.))
+
+index = np.where(abs(vsigma_sq(1./k_test2,z) - 1.) == min(abs(vsigma_sq(1./k_test2,z) - 1.)))[0]
 print 'index', index
-k_sigma = k_test[index]
-print 'k_sigma', k_sigma
+k_sigma = k_test2[index]
 
-n_eff = - (np.diff(vsigma_sq(1./k_test))/np.diff(1./k_test))[index-1] -3.
+#k_sigma = 0.32009
+print 'k_sigma', k_sigma
+R_star = 1./k_sigma
+
+#n_eff = - (np.diff(np.log(vsigma_sq(1./k_test2)))/np.diff(np.log(1./k_test2)))[index-1] -3.
+#print n_eff
+
+n_eff = - d_ln_sigma_sq(R_star,z) -3.
 print n_eff
-A = np.diff(vsigma_sq(1./k_test))/np.diff(1./k_test)
-C = - (np.diff(A)/np.diff(1./k_test[1:]))[index-2]
+
+#A = np.diff(np.log(vsigma_sq(1./k_test2)))/np.diff(np.log(1./k_test2))
+#C = - (np.diff(A)/np.diff(np.log(1./k_test2[1:])))[index-2]
+#print C
+
+C = - d2_ln_sigma_sq(R_star,z)
 print C
 
-Omega_m = 0.3
-def Delta_Q_sq(k):
+#k_sigma =0.32009
+#n_eff = -1.8342
+#C = 0.3019
+Omega_m0 = 0.3
+Omega_lambda0 = 0.7
+
+def Omega_m(z):
+    
+    return Omega_m0*(1.+z)**3/(Omega_lambda0 + (1.- Omega_lambda0-Omega_m0)*(1.+z)**2+ Omega_m0*(1.+z)**3)
+
+def Delta_Q_sq(k,z):
           
-    Delta_L_sq = P_lin.P(k)*k**3/(2*np.pi**2)
+    Delta_L_sq = P_lin.P(k,z)*k**3/(2*np.pi**2)
     y = k/k_sigma
     f_y = y/4. +y**2/8.
     
     alpha_n = abs(6.0835+ 1.3373*n_eff - 0.1959*n_eff**2 - 5.5274*C)
+    print 'alpha', alpha_n
     beta_n = 2.0379 - 0.7354*n_eff + 0.3157*n_eff**2 + 1.2490*n_eff**3 + 0.3980*n_eff**4 - 0.1682*C
-    
-    Delta_sq = Delta_L_sq*((1.+Delta_L_sq)**beta_n/(1.+alpha_n*Delta_L_sq))*np.exp(-f_y)
+    print 'beta', beta_n
+    Delta_sq = Delta_L_sq*(1.+Delta_L_sq)**beta_n/(1.+alpha_n*Delta_L_sq)*np.exp(-f_y)
     
     return Delta_sq
 
-def Delta_H_sq(k):
-          
-    Delta_L_sq = P_lin.P(k)*k**3/(2*np.pi**2)
-    y = k/k_sigma
+def Delta_H_sq(k,z):
     
-    f1 = Omega_m**(-0.0307)
-    f2 = Omega_m**(-0.0585)
-    f3 = Omega_m**(0.0743)
+    y = k/k_sigma
+    Omega_m_z = Omega_m(z)
+    
+    f1 = Omega_m_z**(-0.0307)
+    f2 = Omega_m_z**(-0.0585)
+    f3 = Omega_m_z**(0.0743)
 
     #a_n = 10**(1.5222  +2.8553*n_eff +2.3706*n_eff**2 +0.9903*n_eff**3 +0.2250*n_eff**4 -0.6038*C +0.1749*Omega_w(z)*(1.+w))
     #b_n = 10**(-0.5642 +0.5864*n_eff +0.5716*n_eff**2                                   -1.5474*C +0.2279*Omega_w(z)*(1.+w))
+
     a_n = 10**(1.5222  +2.8553*n_eff +2.3706*n_eff**2 +0.9903*n_eff**3 +0.2250*n_eff**4 -0.6038*C )
     b_n = 10**(-0.5642 +0.5864*n_eff +0.5716*n_eff**2                                   -1.5474*C )
-    c_n = 10**(0.3698  +2.0404*n_eff +0.8161*n_eff**2                                   +0.5869*C)
+    c_n = 10**(0.3698  +2.0404*n_eff +0.8161*n_eff**2                                   +0.5869*C )
     gamma_n =  0.1971  -0.0843*n_eff                                                    +0.8460*C
     
-    Delta_sq = a_n*y**(3.*f1)/(1.+ b_n*y**f2 + (c_n*f3*y)**(3.- gamma_n))
+    mu_n = 0.
+    nu_n = 10**(5.2105 + 3.6902*n_eff)
 
+    
+    
+    Delta_sq_prime = a_n*y**(3.*f1)/(1.+ b_n*y**f2 + (c_n*f3*y)**(3.- gamma_n))
+    Delta_sq = Delta_sq_prime/ (1. + mu_n*y**(-1) + nu_n*y**(-2))
+    
     return Delta_sq
 
 
 def P_nonlin(k,z):
-
-    Delta_sq = Delta_Q_sq(k) + Delta_H_sq(k)
-    P = Delta_sq*2.*np.pi**2/k**3
     
-    return P
+    P_Q = Delta_Q_sq(k,z)*2*np.pi**2/k**3
+    P_H = Delta_H_sq(k,z)*2*np.pi**2/k**3
+    
+    P = P_Q + P_H
+    
+    return P_Q, P_H, P
 
-PS_test = P_nonlin(k_test,0)
-pylab.plot(k_test, PS_test)
+P_Q, P_H, P = P_nonlin(k_test,z)
+
+pylab.plot(k_test, P_H*k_test**3/(2*np.pi**2), label = 'H')
+pylab.plot(k_test, P_Q*k_test**3/(2*np.pi**2), label = 'Q')
+pylab.plot(k_test, P*k_test**3/(2*np.pi**2), label = 'H + Q')
+pylab.plot(k_data, P_data_1*k_data**3/(2*np.pi**2), label = 'P_nl')
+
 pylab.xscale('log')
 pylab.yscale('log')
+pylab.xlim([10**(-3),100])
+pylab.ylim([10**(-6), 2*10**3])
+pylab.legend()
+pylab.show()
+
+
+mult_factor = P_data_1/P
+pylab.plot(k_test,mult_factor)
+pylab.xscale('log')
+pylab.xlim([10**(-3),100])
 pylab.show()

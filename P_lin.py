@@ -6,19 +6,15 @@ from scipy.integrate import simps
 
 c = 2.998 *10**5 #km/s
 
-#Planck 2015
+H0 = 70 #km/s Mpc^-1
+h = 0.7
+omega_lambda = 0.7
+n_s = 0.96 #
+sigma_8 = 0.8 #
 
-H0 = 67.74 #km/s Mpc^-1
-h = 0.6774
-
-
-rho_crit = 2.77*10**11*h**2 #Solar mass/Mpc^3
-
-omega_lambda = 0.6911
-
-omega_b = 0.0486
-omega_c = 0.2589
-
+#rho_crit = 2.77*10**11*h**2 #Solar mass/Mpc^3
+omega_b = 0.05
+omega_c = 0.25
 omega_m = omega_b +omega_c
 
 w_m = omega_m*h**2
@@ -32,6 +28,8 @@ f_cb = (omega_c+ omega_b)/omega_m
 theta_2p7 = 2.728/2.7
 
 z_eq = 2.50*10**4*w_m*theta_2p7**(-4) #
+
+
 R_eq = 31.5*w_b*theta_2p7**(-4)*(z_eq/10**3)**(-1) #
 k_eq = 7.46*10**(-2)*w_m*theta_2p7**(-2) #
 
@@ -43,27 +41,28 @@ R_d = 31.5*w_b*theta_2p7**(-4)*(z_d/10**3)**(-1) #
 
 s = 2./(3.*k_eq) * (6./R_eq)**0.5 *np.log(((1.+R_d)**0.5+(R_d+R_eq)**0.5)/(1.+(R_eq)**0.5))#
 
-n_s = 0.9667 #
-sigma_8 = 0.8159 #
 
-def g(z):
+
+def f(z):
     
     return(omega_m*(1+z)**3 + (1-omega_m-omega_lambda)*(1+z)**2 + omega_lambda)**(0.5)
 
 def Omega(z):
     
-    return omega_m*(1+z)**3/g(z)**2
+    return omega_m*(1+z)**3/f(z)**2
 
 def Omega_lambda_1(z):
     
-    return omega_lambda/g(z)**2
+    return omega_lambda/f(z)**2
 
 def D1(z):
     
-    return (1. + z_eq)/(1+z)*5./2.*Omega(z)*( Omega(z)**(4./7.) - Omega_lambda_1(z) + ( 1. + Omega(z))*(1. +Omega_lambda_1(z)/70.))**(-1)
+    return 1./(1+z)*5./2.*Omega(z)*( Omega(z)**(4./7.) - Omega_lambda_1(z) + ( 1. + Omega(z)/2.)*(1. +Omega_lambda_1(z)/70.))**(-1)
 
 def D(z):
     return D1(z)/D1(0)
+
+#print D1(0)
 
 def T_tilde(k,alpha,beta):
     
@@ -132,15 +131,18 @@ def T1(k):
 
 def W(x):
     #return np.exp(-x**2/2.)
-    return 3/x**3*(np.sin(x) - x*np.cos(x))
+    return 3.*(np.sin(x) - x*np.cos(x))/x**3
+
 
 def P(k,z):
     
     n_tilde = 0.
     delta_H = 1.94*10**(-5)*omega_m**(-0.785-0.05*np.log(omega_m))*np.exp(-0.95*n_tilde-0.169*n_tilde**2)
-    P = 2.*np.pi**2*(c/H0)**(3.+n_s)*delta_H**2*k**n_s*T(k)**2
-    #PS_norm = simps(1./(2*np.pi**2)*k*k*W(k*8.)**2*P, k)
-    #P = P/PS_norm*sigma_8**2
+    PS = 2.*np.pi**2/k**3*(c*k/H0)**(3.+n_s)*delta_H**2*T(k)**2
+    PS_norm = simps(1./(2*np.pi**2)*k**3*W(k*8./h)**2*PS, np.log(k))
+    #print 'D(z)',D(z)
+    #print 'D1(z)',D1(z)
+    PS = PS/PS_norm*sigma_8**2*D(z)**2
           
-    return P
+    return PS
 

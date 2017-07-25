@@ -2,7 +2,7 @@ import numpy as np
 import P_lin
 import pylab
 from scipy.integrate import simps
-
+"""
 h = 0.7
 
 #data1 = np.loadtxt("P_nonlin.txt")
@@ -15,7 +15,7 @@ P_data_1 = data1[:,2]
 P_data_1 = P_data_1/(k_data**3/(2*np.pi**2))
 
 z = 1.
-
+"""
 def sigma_sq(R,z):
     
     k = 10**(-10.+ np.arange(200)/10.)

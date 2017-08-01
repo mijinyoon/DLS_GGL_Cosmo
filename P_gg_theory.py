@@ -2,20 +2,23 @@ import numpy as np
 import P_nonlin
 from scipy.integrate import simps
 from astropy.cosmology import FlatLambdaCDM
-import astropy.cosmology.funcs as cosmofunc
 
 
 
 cosmo = FlatLambdaCDM(H0 = 70, Om0 = 0.3)
 
 
-def P_gg_ell(b, ell,p_z, z ):
+def P_gg_ell(ell, b, p_z, z ):
+    print ell
+    x = cosmo.comoving_distance(z).value
+    fk = (cosmo.angular_diameter_distance(z)*(1.+z)).value # (1+z) factor: converted to comoving scale.
 
-    x = cosmofunc.comoving_distance(z,cosmo)
-    fk = cosmofunc.angular_diameter_distance(z, cosmo)*(1.+z) # (1+z) factor: converted to comoving scale.
-
-
-    return b**2*simps(p_z**2/fk**2*P_nonlin.P_nonlin(((ell+1./2.)/fk), z),x)
+    PS = np.zeros(len(z))
+    for i in range(len(z)):
+        #print 'z:',z[i]
+        PS[i] = P_nonlin.P_nonlin(((ell+1./2.)/fk[i]), z[i])
+    
+    return ell, b**2*simps(p_z**2/fk**2*PS,x)
 
 def P_band(ell, P_ell):
     lmin = ell[0]

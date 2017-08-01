@@ -16,6 +16,12 @@ P_data_1 = P_data_1/(k_data**3/(2*np.pi**2))
 
 z = 1.
 """
+data = np.loadtxt("z_ksigma_neff_C_james_lens.txt")
+z_array = data[:,0]
+k_sigma_array = data[:,1]
+n_eff_array = data[:,2]
+C_array = data[:,3]
+
 def sigma_sq(R,z):
     
     k = 10**(-10.+ np.arange(200)/10.)
@@ -121,25 +127,35 @@ def Delta_H_sq(Omega_m0,Omega_lambda0,k,z, k_sigma, n_eff, C):
 
 
 def P_nonlin(k,z,h=0.7,Omega_m0= 0.3,Omega_lambda0= 0.7, Omega_b= 0.05, Omega_c =0.25,n_s = 0.96,sigma_8 = 0.8 ):
-    
+    """
     k_test2 = (np.arange(10000)+1.)/1000.
     index = np.where(abs(vsigma_sq(1./k_test2,z) - 1.) == min(abs(vsigma_sq(1./k_test2,z) - 1.)))[0]
     k_sigma = k_test2[index]
     R_star = 1./k_sigma
     n_eff = - d_ln_sigma_sq(R_star,z) -3.
-
+    C = - d2_ln_sigma_sq(R_star,z)
+    #return z, k_sigma, n_eff, C
+    """
+    
+    index = np.where(z == z_array)[0]
+    if len(index) != 1:
+        print 'error'
+    k_sigma = k_sigma_array[index]
+    n_eff = n_eff_array[index]
+    C = C_array[index]
+    
     #A = np.diff(np.log(vsigma_sq(1./k_test2)))/np.diff(np.log(1./k_test2))
     #C = - (np.diff(A)/np.diff(np.log(1./k_test2[1:])))[index-2]
-    C = - d2_ln_sigma_sq(R_star,z)
     
+
     P_Q = Delta_Q_sq(Omega_m0,Omega_b,Omega_c,Omega_lambda0,h, n_s,sigma_8,k,z, k_sigma, n_eff, C)*2*np.pi**2/k**3
     P_H = Delta_H_sq(Omega_m0,Omega_lambda0,k,z, k_sigma, n_eff, C)*2*np.pi**2/k**3
     
     P = P_Q + P_H
     
     return P
-
 """
+
 P = P_nonlin(k_test,z, h=0.7,Omega_m0= 0.3,Omega_lambda0= 0.7, Omega_b= 0.05, Omega_c =0.25,n_s = 0.96,sigma_8 = 0.8 )
 
 #pylab.plot(k_test, P_H*k_test**3/(2*np.pi**2), label = 'H')
@@ -162,3 +178,4 @@ pylab.xscale('log')
 pylab.xlim([10**(-3),100])
 pylab.show()
 """
+

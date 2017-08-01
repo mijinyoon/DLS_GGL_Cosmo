@@ -30,17 +30,33 @@ def g(x,p_z):
                                           
     return gi
 
-def P_gm_ell(b, ell,p_z, z ):
-                                     
-    x = cosmofunc.comoving_distance(z,cosmo)
-    a = cosmofunc.scale_factor(z,cosmo)
-    fk = cosmofunc.angular_diameter_distance(z, cosmo)*(1+z) # (1+z) factor: converted to comoving scale.
+def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
+    #print ell
     
+    x_source = cosmo.comoving_distance(z_source)
+    x_lens = cosmo.comoving_distance(z_lens)
+    A_factor = cosmo.scale_factor(z_lens)
+    print x_source
+    print x_lens
+    print A_factor
+    fk = cosmo.angular_diameter_distance(z_lens)*(1.+z_lens) # (1+z) factor: converted to comoving scale.
     factor = 3.*cosmo.H0**2*cosmo.Om0/(2.*const.c.to('km/s')**2)
+    
+    print fk
     print factor
-                      
-    return b*factor*simps(p_z*g(x,p_z)/a/fk*P_nonlin((ell+1./2.)/fk, x),x)
+    
+    PS = np.zeros(len(z_lens))
+    
+    for i in range(len(z_lens)):
+        #print 'z:',z[i]
+        PS[i] = P_nonlin.P_nonlin(((ell+1./2.)/fk[i]), z_lens[i])
+        #print factor
 
+    PS2 = b*factor*simps(p_z_lens*g(x_source,p_z_source)/A_factor/fk*PS,x_lens)
+    #print PS
+    #print PS2
+
+    return ell, PS2.value
 
 
 

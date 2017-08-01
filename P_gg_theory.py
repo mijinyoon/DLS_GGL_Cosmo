@@ -17,6 +17,7 @@ def P_gg_ell(ell, b, p_z, z ):
     fk = (cosmo.angular_diameter_distance(z)*(1.+z)).value # (1+z) factor: converted to comoving scale.
     dz_dx = dz_dx_func(z)
     p_x = p_z*dz_dx
+    #print simps(p_x, x)
     
     PS = np.zeros(len(z))
     for i in range(len(z)):

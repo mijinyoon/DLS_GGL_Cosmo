@@ -5,11 +5,11 @@ from astropy.cosmology import FlatLambdaCDM
 import astropy.cosmology.funcs as cosmofunc
 from astropy import constants as const
 from scipy.interpolate import interp1d
-import pylab
+#import pylab
 
 cosmo = FlatLambdaCDM(H0 = 70, Om0 = 0.3)
 
-Ok0 = 0
+Ok0 = 0.
 
 def fk_x(x):
     
@@ -19,6 +19,10 @@ def fk_x(x):
         return np.sinh((Ok0)**0.5*cosmo.H0*x/(cosmo.H0*(Ok0)**0.5))
     elif Ok0 < 0.:
         return np.sin((-Ok0)**0.5*cosmo.H0*x/(cosmo.H0*(-Ok0)**0.5))
+
+def dz_dx_func(z):
+    h = 10**(-6)
+    return     2.*h/(cosmo.comoving_distance(z+h).value - cosmo.comoving_distance(z-h).value)
 
 def g(z,p_z):
     
@@ -48,9 +52,6 @@ def g_func(x_input,x_min, x_max, g_interp):
 
 vg_func = np.vectorize(g_func)
 
-def dz_dx_func(z):
-    h = 10**(-6)
-    return     2.*h/(cosmo.comoving_distance(z+h).value - cosmo.comoving_distance(z-h).value)
 
 def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
     print ell
@@ -65,13 +66,27 @@ def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
     factor = 3.*cosmo.H0**2*cosmo.Om0/(2.*const.c.to('km/s')**2)
     
     x_source, g_source = g(z_source,p_z_source)
+    #pylab.plot(z_source, g_source)
+    #pylab.show()
+    g_interp = interp1d(x_source, g_source, kind = 'cubic')
+    g_at_lens_distance = vg_func(x_lens ,min(x_source), max(x_source), g_interp)
+
+    index = np.where(g_source > 10**(-5))[0]
+    z_source = z_source[index]
+    x_source = x_source[index]
+    g_source = g_source[index]
     #print x_source
     
-    g_interp = interp1d(x_source, g_source, kind = 'cubic')
+    #pylab.plot(z_source, g_source)
+    #pylab.show()
 
-                
+    g_interp = interp1d(x_source, g_source, kind = 'cubic')
+    
     g_at_lens_distance = vg_func(x_lens ,min(x_source), max(x_source), g_interp)
     
+    #pylab.plot(z_lens, x_lens)
+    #pylab.show()
+
     PS = np.zeros(len(z_lens))
     
     for i in range(len(z_lens)):
@@ -79,11 +94,8 @@ def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
         PS[i] = P_nonlin.P_nonlin(((ell+1./2.)/fk[i]), z_lens[i])
         #print factor
 
-    PS2 = b*factor*simps(p_x_lens*g_at_lens_distance/A_factor/fk*PS,x_lens)
-    #print PS
-    #print PS2
 
-    return ell, PS2.value
+    return ell, (b*factor*simps(p_x_lens*g_at_lens_distance/A_factor/fk*PS,x_lens)).value
 
 
 

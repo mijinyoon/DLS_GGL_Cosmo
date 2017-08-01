@@ -38,34 +38,36 @@ p_z_s = data[:,3]
 
 #z = z[10:101]
 #p_z = p_z[10:101]
-#p_z = p_z/np.sum(p_z)/(z[1]-z[0])
-""""
+p_z_l = p_z_l/np.sum(p_z_l)/(z_l[1]-z_l[0])
+p_z_s = p_z_s/np.sum(p_z_s)/(z_s[1]-z_s[0])
+
 def P_gg_cal(ell):
-    return P_gg_ell(ell, b,p_z,z)
-"""
+    return P_gg_ell(ell, b,p_z_l,z_l)
+
 def P_gm_cal(ell):
     return P_gm_ell(ell, b,z_l,p_z_l,z_s, p_z_s)
+
 """
 for ell in range(10,2001):
     print P_gm_cal(ell)
-
+"""
 def mp_handler():
 
     pool = Pool(16)
     ell_range =np.arange(10,2001)
     with open("P_ell_gg_lens.txt","w") as f:
         for P_gg_theory_zcomb in pool.imap(P_gg_cal, ell_range):
-            f.write("%d %.8f\n"%(P_gg_theory_zcomb))
-"""
+            f.write("%d %E\n"%(P_gg_theory_zcomb))
 
+"""
 def mp_handler():
     
     pool = Pool(16)
     ell_range =np.arange(10,2001)
     with open("P_ell_gm.txt","w") as f:
         for P_gm_theory_zcomb in pool.imap(P_gm_cal, ell_range):
-            f.write("%d %.8f\n"%(P_gm_theory_zcomb))
-
+            f.write("%d %E\n"%(P_gm_theory_zcomb))
+"""
 if __name__=='__main__':
     mp_handler()
 

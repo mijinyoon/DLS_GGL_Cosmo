@@ -4,7 +4,7 @@ from P_gm_theory import *
 from P_gg_theory import *
 import numpy as np
 from multiprocessing import Pool
-
+from datetime import datetime
 
 #ell_min_range = np.round(2*10**(2+np.arange(5)/5.))
 #ell_max_range = np.append(ell_min_range[1:]-1  ,2000.)
@@ -52,22 +52,26 @@ for ell in range(10,2001):
     print P_gm_cal(ell)
 """
 def mp_handler():
-
-    pool = Pool(16)
+    A =  datetime.now()
+    pool = Pool(20)
     ell_range =np.arange(10,2001)
     with open("P_ell_gg_lens.txt","w") as f:
         for P_gg_theory_zcomb in pool.imap(P_gg_cal, ell_range):
             f.write("%d %E\n"%(P_gg_theory_zcomb))
+    B = datetime.now()
+    print (B - A)
 
-"""
-def mp_handler():
-    
-    pool = Pool(16)
+
+def mp_handler2():
+    A =  datetime.now()
+    pool = Pool(20)
     ell_range =np.arange(10,2001)
     with open("P_ell_gm.txt","w") as f:
         for P_gm_theory_zcomb in pool.imap(P_gm_cal, ell_range):
             f.write("%d %E\n"%(P_gm_theory_zcomb))
-"""
+    B = datetime.now()
+    print (B - A)
+
 if __name__=='__main__':
-    mp_handler()
+    mp_handler2()
 

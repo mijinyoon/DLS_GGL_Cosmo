@@ -170,9 +170,15 @@ def P(k,z,omega_m = 0.3, omega_b = 0.05,omega_c = 0.25,omega_lambda=0.7,h = 0.7,
     delta_H = 1.94*10**(-5)*omega_m**(-0.785-0.05*np.log(omega_m))*np.exp(-0.95*n_tilde-0.169*n_tilde**2)
     #print len(k)
     #print len(T(omega_m,omega_b,omega_c,h,k))
-    PS = 2.*np.pi**2/k**3*(c*k/H0)**(3.+n_s)*delta_H**2*T(omega_m,omega_b,omega_c,h,k)**2
     
-    PS_norm = simps(1./(2*np.pi**2)*k**3*W(k*8./h)**2*PS, np.log(k))
+    PS = 2.*np.pi**2/k**3*(c*k/H0)**(3.+n_s)*delta_H**2*T(omega_m,omega_b,omega_c,h,k)**2
+    """
+    k_norm = 10**(-10.+ np.arange(800)/50.)
+    PS1 = 2.*np.pi**2/k_norm**3*(c*k_norm/H0)**(3.+n_s)*delta_H**2*T(omega_m,omega_b,omega_c,h,k_norm)**2
+    PS_norm = simps(1./(2*np.pi**2)*k_norm**3*W(k_norm*8./h)**2*PS1, np.log(k_norm))
+    print PS_norm
+    """
+    PS_norm = 0.529210338327
     PS = PS/PS_norm*sigma_8**2*D(omega_m,omega_lambda,z)**2
           
     return PS

@@ -128,13 +128,13 @@ def Delta_H_sq(Omega_m0,Omega_lambda0,k,z, k_sigma, n_eff, C):
 
 def P_nonlin(k,z,h=0.7,Omega_m0= 0.3,Omega_lambda0= 0.7, Omega_b= 0.05, Omega_c =0.25,n_s = 0.96,sigma_8 = 0.8 ):
     """
-    k_test2 = (np.arange(10000)+1.)/1000.
+    k_test2 = (np.arange(2500)+3000.)/10000.
     index = np.where(abs(vsigma_sq(1./k_test2,z) - 1.) == min(abs(vsigma_sq(1./k_test2,z) - 1.)))[0]
     k_sigma = k_test2[index]
     R_star = 1./k_sigma
     n_eff = - d_ln_sigma_sq(R_star,z) -3.
     C = - d2_ln_sigma_sq(R_star,z)
-    #return z, k_sigma, n_eff, C
+    return z, k_sigma, n_eff, C
     """
     
     index = np.where(z == z_array)[0]
@@ -154,8 +154,8 @@ def P_nonlin(k,z,h=0.7,Omega_m0= 0.3,Omega_lambda0= 0.7, Omega_b= 0.05, Omega_c 
     P = P_Q + P_H
     
     return P
-"""
 
+"""
 P = P_nonlin(k_test,z, h=0.7,Omega_m0= 0.3,Omega_lambda0= 0.7, Omega_b= 0.05, Omega_c =0.25,n_s = 0.96,sigma_8 = 0.8 )
 
 #pylab.plot(k_test, P_H*k_test**3/(2*np.pi**2), label = 'H')
@@ -177,5 +177,6 @@ pylab.plot(k_test,mult_factor)
 pylab.xscale('log')
 pylab.xlim([10**(-3),100])
 pylab.show()
-"""
 
+
+"""

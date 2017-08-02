@@ -21,8 +21,10 @@ def fk_x(x):
         return np.sin((-Ok0)**0.5*cosmo.H0*x/(cosmo.H0*(-Ok0)**0.5))
 
 def dz_dx_func(z):
-    h = 10**(-6)
-    return     2.*h/(cosmo.comoving_distance(z+h).value - cosmo.comoving_distance(z-h).value)
+    
+    dx_dz = const.c.to('km/s')/cosmo.H0/np.sqrt(cosmo.Om0*(1.+z)**3 + cosmo.Ok0*(1.+z)**2 + (1-cosmo.Om0 - cosmo.Ok0) )
+    dz_dx = 1./dx_dz
+    return dz_dx
 
 def g(z,p_z):
     
@@ -31,6 +33,7 @@ def g(z,p_z):
     dz_dx = dz_dx_func(z)
     
     p_x = p_z*dz_dx
+    p_x = p_x/simps(p_x, x)
     
     gi = np.zeros(len(x))
     
@@ -61,6 +64,7 @@ def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
 
     A_factor = cosmo.scale_factor(z_lens)
     p_x_lens = p_z_lens*dz_dx
+    p_x_lens = p_x_lens/simps(p_x_lens, x_lens)
     
     fk = (cosmo.angular_diameter_distance(z_lens).value*(1.+z_lens)) # (1+z) factor: converted to comoving scale.
     factor = 3.*cosmo.H0**2*cosmo.Om0/(2.*const.c.to('km/s')**2)
@@ -68,8 +72,6 @@ def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
     x_source, g_source = g(z_source,p_z_source)
     #pylab.plot(z_source, g_source)
     #pylab.show()
-    g_interp = interp1d(x_source, g_source, kind = 'cubic')
-    g_at_lens_distance = vg_func(x_lens ,min(x_source), max(x_source), g_interp)
 
     index = np.where(g_source > 10**(-5))[0]
     z_source = z_source[index]
@@ -81,7 +83,6 @@ def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
     #pylab.show()
 
     g_interp = interp1d(x_source, g_source, kind = 'cubic')
-    
     g_at_lens_distance = vg_func(x_lens ,min(x_source), max(x_source), g_interp)
     
     #pylab.plot(z_lens, x_lens)
@@ -93,7 +94,6 @@ def P_gm_ell(ell,b, z_lens,p_z_lens,z_source, p_z_source):
         #print 'z:',z[i]
         PS[i] = P_nonlin.P_nonlin(((ell+1./2.)/fk[i]), z_lens[i])
         #print factor
-
 
     return ell, (b*factor*simps(p_x_lens*g_at_lens_distance/A_factor/fk*PS,x_lens)).value
 

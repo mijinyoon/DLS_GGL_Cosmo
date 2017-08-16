@@ -63,7 +63,7 @@ def P_band(p_ell, lmax,lmin):
 
 def cal_likelihood(inputs):
     b , Omega_c , Omega_b , h , sigma8 ,n_s  = inputs
-    print b
+    
     p = ccl.Parameters(Omega_c = Omega_c, Omega_b = Omega_b , h = h, sigma8 = sigma8 ,n_s = n_s)
     cosmo = ccl.Cosmology(p)
 
@@ -81,11 +81,9 @@ def cal_likelihood(inputs):
     Delta_p_gg = p_gg_obs - p_band_gg_th
 
     Delta_p = np.hstack((Delta_p_gm , Delta_p_gg ))
-    print np.shape(Delta_p)
 
     Likelihood = np.exp(-1./2.*np.dot(np.dot(Delta_p, cov_inv), Delta_p.T))
 
-    print Likelihood
     return Likelihood
 
 
@@ -93,59 +91,71 @@ def cal_likelihood(inputs):
 
 
 
-def param_comparison(param_old, param_candid):
+def param_comparison(lkhood_old, param_candid):
     
-    lkhood_old = cal_likelihood(param_old)
+    #lkhood_old = cal_likelihood(param_old)
     lkhood_new = cal_likelihood(param_candid)
-
+    print 'lkhood_new', lkhood_new
     alpha = lkhood_new/lkhood_old
+    
+    print 'alpha', alpha
 
     if alpha >= 1.:
-        return True
+        return True, lkhood_new
 
     else:
         rand = np.random.uniform(0.,1.)
+        print 'rand', rand
+        
         if rand <= alpha:
-            return True
+            return True, lkhood_new
         else:
-            return False
+            return False, lkhood_old
 
 
 def param_gen(input_params) :
     
     bias_center,Oc_center, Ob_center, hubble_center, sigma8_center, ns_center = input_params
     
-    bias = stats.truncnorm((bias_lim[0]-bias_center)/bias_lim[2], (bias_lim[1]-bias_center)/bias_lim[2], bias_center, bias_lim[2]).rvs(1)
-    Oc = stats.truncnorm((Oc_lim[0]-Oc_center)/Oc_lim[2], (Oc_lim[1]-Oc_center)/Oc_lim[2], Oc_center, Oc_lim[2]).rvs(1)
-    Ob = stats.truncnorm((Ob_lim[0] - Ob_center)/Ob_lim[2], (Ob_lim[1] - Ob_center)/Ob_lim[2], Ob_center, Ob_lim[2]).rvs(1)
-    hubble = stats.truncnorm(( hubble_lim[0] -  hubble_center)/ hubble_lim[2], ( hubble_lim[1] -  hubble_center)/ hubble_lim[2],  hubble_center,  hubble_lim[2]).rvs(1)
-    sigma8 = stats.truncnorm((sigma8_lim[0] - sigma8_center)/sigma8_lim[2], (sigma8_lim[1] - sigma8_center)/sigma8_lim[2], sigma8_center, sigma8_lim[2]).rvs(1)
-    ns = stats.truncnorm((ns_lim[0] - ns_center)/ns_lim[2], (ns_lim[1] - ns_center)/ns_lim[2], ns_center, ns_lim[2]).rvs(1)
+    bias = stats.truncnorm((bias_lim[0]-bias_center)/bias_lim[2], (bias_lim[1]-bias_center)/bias_lim[2], bias_center, bias_lim[2]).rvs(1)[0]
+    Oc = stats.truncnorm((Oc_lim[0]-Oc_center)/Oc_lim[2], (Oc_lim[1]-Oc_center)/Oc_lim[2], Oc_center, Oc_lim[2]).rvs(1)[0]
+    Ob = stats.truncnorm((Ob_lim[0] - Ob_center)/Ob_lim[2], (Ob_lim[1] - Ob_center)/Ob_lim[2], Ob_center, Ob_lim[2]).rvs(1)[0]
+    hubble = stats.truncnorm(( hubble_lim[0] -  hubble_center)/ hubble_lim[2], ( hubble_lim[1] -  hubble_center)/ hubble_lim[2],  hubble_center,  hubble_lim[2]).rvs(1)[0]
+    sigma8 = stats.truncnorm((sigma8_lim[0] - sigma8_center)/sigma8_lim[2], (sigma8_lim[1] - sigma8_center)/sigma8_lim[2], sigma8_center, sigma8_lim[2]).rvs(1)[0]
+    ns = stats.truncnorm((ns_lim[0] - ns_center)/ns_lim[2], (ns_lim[1] - ns_center)/ns_lim[2], ns_center, ns_lim[2]).rvs(1)[0]
     
     return np.array([bias, Oc, Ob, hubble, sigma8, ns])
 
 def running_mcmc(N_iter):
     
     param_ref = np.array([1.,  0.25,  0.05, 0.7, 0.8 ,0.96])
+    likelihood_ref = cal_likelihood(param_ref)
     print param_ref
-
-    for i in range(N_iter):
+    print likelihood_ref
     
+    for i in range(N_iter):
+        print i
         param_test = param_gen(param_ref)
+        print param_test
         
-        if param_comparison(param_ref, param_test) == True:
+        test_result, likelihood_ref = param_comparison(likelihood_ref, param_test)
+        
+        if test_result == True:
+            
+            print 'accept'
             param_ref = param_test
             file.writelines(["%f " %item  for item in param_ref])
             file.writelines("\n")
     
         else:
+            print 'reject'
             file.writelines(["%f " %item  for item in param_ref])
             file.writelines("\n")
 
 
 
 
-running_mcmc(1000)
+running_mcmc(20)
 
 
 
